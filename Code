@@ -1,0 +1,126 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Scanner;
+
+/* for simplicity, lets assume that we dont have to read the file and determine number of rows or collums
+we already know by looking at the file*/
+/*also in my file, inf is understood to be 99999 (for program simplicty sake)*/
+//For the file, I used the same graph as in the slides on canvas since it allows for easy checking.
+
+//to compile, make a text file and name it Input, then use these numbers and put them in the file
+/*
+0 4 5
+2 0 99999
+99999 -3 0
+*/
+public class App 
+{
+    static final int V = 3; //number of verticies in the graph
+    static int inputValidation(int graph[][])
+    {
+        for(int i=0; i<V; i++)
+        {
+            for (int j=0; j<V; j++)
+            {
+                if (i==j)
+                {
+                    if (graph[i][j]==0)
+                    {
+                        System.out.println("Input is good!");
+                        return 1; //1 = true
+                    }
+                    else
+                    {
+                        System.out.println("Error in graph, fix and rerun the program.");
+                        return 2; //2 = false
+                    }
+                }
+            }
+        }
+        return 0; //default
+    }
+    
+    static void floyd(int graph[][])
+    {
+        //take the already made graph and make a new one copying the old into the new
+        int tempGraph[][] = new int[V][V];
+         
+        //now we initalize temp graph with the parementer graph for d0
+        for(int i=0; i<V; i++)
+        {
+            System.arraycopy(graph[i], 0, tempGraph[i], 0, V);//java has a handy feature to copy arrays without double forloops
+        }
+        
+        //now we implement the actual algorithm, there are 2 choices: if k is on the path or if k is not on the path.
+        //d^k[i,j] = min{d^k-1[i,j] or d^k-1[i,k]+[k,j]}
+        //we go thru each verticies one by one and if k is on the shortest path, we update the distance
+        for(int k=0; k<V; k++)
+        {
+            for(int i=0; i<V; i++)
+            {
+                for(int j=0; j<V; j++)
+                {
+                    if((tempGraph[i][k] + tempGraph[k][j]) < tempGraph[i][j])
+                    {
+                        //update distance
+                        tempGraph[i][j] = tempGraph[i][k]+tempGraph[k][j];
+                    }
+                }
+            }
+        }
+        //now we print
+        System.out.println("The shortest distance between all verticies is: ");
+        System.out.println(Arrays.deepToString(tempGraph)); //prints the array as a string and makes it all neat and pleasing to the eyes
+        
+    }
+    static void findShortestPath(File file) throws IOException
+    {
+        //gets a file as input and runs the function based on the file
+        Scanner scan = new Scanner(new BufferedReader(new FileReader(file)));
+       
+//number of rows and colums inside the file
+        int R = V; 
+        int S = V;
+        int graph[][] = new int[R][S]; //building a 2d array
+        while (scan.hasNext())
+        {
+            for(int i=0; i<graph.length; i++)
+            {
+                String[] line = scan.nextLine().trim().split(" "); //splits lines by whitespace  
+                for(int j=0; j<line.length; j++)
+                {
+                    graph[i][j] = Integer.parseInt(line[j]); //goes across the current line and parses each element and stores it
+                }
+            }
+        }
+        
+        //now once the graph is built, we need to do input validation: graph[i][j] need to be 0 if i==j
+        int checkValid = App.inputValidation(graph);
+        
+        if (checkValid == 1)
+        {
+            //if the file has the correct input, run the algorithm
+            App.floyd(graph);
+        }
+        else
+        {
+            System.exit(0);
+            //if the input is bad terminate program
+        }
+        
+        
+       //test print: System.out.println(Arrays.deepToString(graph));
+    };
+        
+        
+        
+    public static void main(String[] args) throws IOException
+    {
+        File inputFile = new File("Input.txt");
+        App.findShortestPath(inputFile);
+    }
+    
+}
